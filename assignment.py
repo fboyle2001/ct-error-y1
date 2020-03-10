@@ -66,11 +66,11 @@ def hammingEncoder(m):
 
     #multiply the matrices to get the encoded message
     generator_matrix = hammingGeneratorMatrix(r)
-    encoded_message = multiply_matrices([m], generator_matrix)
+    encoded_message = multiply_matrices_m2([m], generator_matrix)
     
     return encoded_message[0]
 
-def multiply_matrices(a, b):
+def multiply_matrices_m2(a, b):
     dim_a = (len(a), len(a[0]))
     dim_b = (len(b), len(b[0]))
 
@@ -93,19 +93,123 @@ def multiply_matrices(a, b):
             element = 0
             for i in range(0, len(row)):
                 element += row[i] * col[i]
+            element %= 2
             result_row.append(element)
         result_matrix.append(result_row)
 
     return result_matrix
 
 def hammingDecoder(v):
-    return []
+    r = 2
+
+    #check we have a valid vector
+    
+    while 2 ** r - 1 < len(v):
+        r += 1
+        
+    if 2 ** r - 1 != len(v):
+        return []
+
+    #find the parity check transpose
+    #multiply it with v to find any errors
+    
+    pc_transpose = parity_check_transpose(r)
+    result = multiply_matrices_m2([v], pc_transpose)[0]
+
+    #if the vector's components are all 0 then there are no errors
+
+    error = False
+
+    for element in result:
+        if element != 0:
+            error = True
+            break
+
+    if not error:
+        return v
+
+    #otherwise we have an error
+    #correct this by finding the position of the error and flipping the bit
+
+    error_position = 0
+
+    for i in range(0, len(result)):
+        error_position += result[i] * (2 ** (len(result) - i - 1))
+
+    #correct the error and fix the binary
+
+    v[error_position - 1] += 1
+    v[error_position - 1] %= 2
+    
+    return v
+
+def parity_check_transpose(r):
+    rows = []
+
+    #calculate the binary for every number 1...2**r - 1
+    #these are the rows of the transpose
+    
+    for i in range(1, 2 ** r):
+        bin_vector = decimalToVector(i, r)
+        rows.append(bin_vector)
+        
+    return rows
 
 def messageFromCodeword(c):
-    return []
+    r = 2
+
+    #check we have a valid vector
+    
+    while 2 ** r - 1 < len(c):
+        r += 1
+        
+    if 2 ** r - 1 != len(c):
+        return []
+
+    k = 1
+    message = []
+
+    #skip each index if it is 2 ** k - 1
+
+    for i in range(0, len(c)):
+        if i == k - 1:
+            k *= 2
+            continue
+        message.append(c[i])
+    
+    return message
 
 def dataFromMessage(m):
-    return []
+    r = 2
+
+    #check we have a valid vector
+    
+    while 2 ** r - r - 1 < len(m):
+        r += 1
+        
+    if 2 ** r - r - 1 != len(m):
+        return []
+
+    #first r bits represent the length of the data
+
+    len_bin = m[0:r]
+    data_pos = 0
+
+    #calculate the length from the binary
+
+    for i in range(0, len(len_bin)):
+        data_pos += len_bin[i] * (2 ** (len(len_bin) - i - 1))
+
+    #ensure that the length of the data is actually possible
+
+    if data_pos > 2 ** r - 2 * r - 1:
+        return []
+
+    #select and return the data
+
+    data = m[r:r+data_pos]
+    
+    return data
 
 #function HammingG
 #input: a number r
@@ -145,5 +249,3 @@ def hammingGeneratorMatrix(r):
     G = [list(i) for i in zip(*G)]
 
     return G
-
-print(hammingEncoder([1, 0, 0, 0]))
