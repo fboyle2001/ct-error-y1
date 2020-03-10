@@ -98,6 +98,15 @@ def multiply_matrices(a, b):
 
     return result_matrix
 
+def hammingDecoder(v):
+    return []
+
+def messageFromCodeword(c):
+    return []
+
+def dataFromMessage(m):
+    return []
+
 #function HammingG
 #input: a number r
 #output: G, the generator matrix of the (2^r-1,2^r-r-1) Hamming code
@@ -136,7 +145,5 @@ def hammingGeneratorMatrix(r):
     G = [list(i) for i in zip(*G)]
 
     return G
-
-
 
 print(hammingEncoder([1, 0, 0, 0]))
